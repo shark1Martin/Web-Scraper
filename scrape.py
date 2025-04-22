@@ -1,10 +1,6 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
-
 from bs4 import BeautifulSoup
 import requests
 import time
@@ -30,17 +26,18 @@ MIN_PROFIT_DOLLARS = 10.00
 MIN_PERCENT = 2.00
 NOTIFIED_FILE = "notified_entries.txt"
 
-# --- Chrome setup (headless) ---
+# --- Chrome setup ---
 chrome_profile_path = r"C:\Users\mmaka\AppData\Local\Google\Chrome\User Data"
-profile_dir = "Default"
+profile_dir = "Profile 2"
 
 options = Options()
 options.add_argument(f"user-data-dir={chrome_profile_path}")
 options.add_argument(f"profile-directory={profile_dir}")
-options.add_argument("--headless=new")
 options.add_argument("--window-size=1920,1080")
 options.add_argument("--disable-gpu")
 options.add_argument("--log-level=3")
+# Optional: move window far off-screen if you want it invisible
+# options.add_argument("--window-position=10000,10000")
 
 # --- Load previously notified entries ---
 def load_notified_entries(filepath):
@@ -54,45 +51,22 @@ def save_notified_entry(filepath, entry):
     with open(filepath, 'a') as file:
         file.write(entry + '\n')
 
-# --- Click the yellow "Update" button if it exists ---
-def click_update_if_available(driver):
-    try:
-        update_buttons = driver.find_elements(By.TAG_NAME, "button")
-        for btn in update_buttons:
-            classlist = btn.get_attribute("class")
-            inner_html = btn.get_attribute("innerHTML").lower()
-
-            if "mat-warn" in classlist and "update" in inner_html:
-                btn.click()
-                print("🟡 Clicked glowing Update icon button (mat-warn).")
-                time.sleep(3)
-                return
-
-        print("🔄 No glowing Update button found — reloading page.")
-        driver.refresh()
-        time.sleep(5)
-
-    except Exception as e:
-        print(f"⚠️ Error clicking update button: {e}")
-        driver.refresh()
-        time.sleep(5)
-
-# Set of entries already notified (persistent across reboots!)
+# Initialize seen entries
 seen_entries = load_notified_entries(NOTIFIED_FILE)
 
-def fetch_and_check_arbitrage():
-    global seen_entries
+# Launch Chrome once
+driver = webdriver.Chrome(options=options)
+driver.get("https://darkhorseodds.com/arbitrage")
+time.sleep(5)
 
-    driver = webdriver.Chrome(options=options)
-    driver.get("https://darkhorseodds.com/arbitrage")
+# --- Scrape and notify ---
+def fetch_and_check_arbitrage():
+    global seen_entries, driver
+
+    driver.refresh()
     time.sleep(5)
 
-    # NEW: Try to click update, or fallback to reload
-    click_update_if_available(driver)
-
     soup = BeautifulSoup(driver.page_source, 'lxml')
-    driver.quit()
-
     profit_cells = soup.find_all('td', class_='profit-col')
     new_found = 0
 
@@ -135,3 +109,4 @@ try:
         time.sleep(INTERVAL_MINUTES * 60)
 except KeyboardInterrupt:
     print("🛑 Script manually stopped.")
+    driver.quit()
