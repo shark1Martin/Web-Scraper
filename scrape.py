@@ -5,8 +5,8 @@ import requests
 import time
 
 # --- Pushover setup ---
-USER_KEY = "ubxha8koods5ppmui6r6rjavv1cezo"  # Replace with your User Key
-APP_TOKEN = "a7enzwkoonfe9u17pbkun7sqfyjogr"  # Replace with your App Token
+USER_KEY = "ubxha8koods5ppmui6r6rjavv1cezo"
+APP_TOKEN = "a7enzwkoonfe9u17pbkun7sqfyjogr"
 
 def send_push_notification(user_key, app_token, message, title="DarkHorse Alert"):
     payload = {
@@ -18,47 +18,73 @@ def send_push_notification(user_key, app_token, message, title="DarkHorse Alert"
     response = requests.post("https://api.pushover.net/1/messages.json", data=payload)
     return response.status_code == 200
 
+# --- Config ---
+INTERVAL_MINUTES = 5
+MIN_PROFIT_DOLLARS = 10.00
+MIN_PERCENT = 2.00
 
-# --- Chrome setup using your real profile ---
+# --- Chrome setup (headless) ---
 chrome_profile_path = r"C:\Users\mmaka\AppData\Local\Google\Chrome\User Data"
-profile_dir = "Default"  # Change if using a different profile
+profile_dir = "Default"
 
 options = Options()
 options.add_argument(f"user-data-dir={chrome_profile_path}")
 options.add_argument(f"profile-directory={profile_dir}")
-options.add_experimental_option("detach", True)  # Keeps Chrome open after script ends
+options.add_argument("--headless=new")
+options.add_argument("--window-size=1920,1080")
+options.add_argument("--disable-gpu")
+options.add_argument("--log-level=3")
 
-# Launch Chrome browser
-driver = webdriver.Chrome(options=options)
+# Cache of already-notified entries
+seen_entries = set()
 
-# Go directly to the protected page (since you're already logged in)
-driver.get("https://darkhorseodds.com/arbitrage")
-time.sleep(5)  # Wait for content to load
+def fetch_and_check_arbitrage():
+    global seen_entries
 
-# Parse the page
-soup = BeautifulSoup(driver.page_source, 'lxml')
+    driver = webdriver.Chrome(options=options)
+    driver.get("https://darkhorseodds.com/arbitrage")
+    time.sleep(5)
+    soup = BeautifulSoup(driver.page_source, 'lxml')
+    driver.quit()
 
-# Find all profit <td> cells
-profit_cells = soup.find_all('td', class_='profit-col')
+    profit_cells = soup.find_all('td', class_='profit-col')
+    new_found = 0
 
-# Print and send notification
-print(f"✅ Found {len(profit_cells)} profit entries:")
-for cell in profit_cells:
-    texts = list(cell.stripped_strings)
-    if len(texts) >= 2:
-        amount = texts[0]
-        percentage = texts[1]
-        message = f"💵 {amount} | 📈 {percentage}"
-        print(f"- {message}")
-        
-        # Send the push notification
-        success = send_push_notification(USER_KEY, APP_TOKEN, message)
-        if success:
-            print("🔔 Notification sent.")
-        else:
-            print("❌ Failed to send notification.")
+    for cell in profit_cells:
+        texts = list(cell.stripped_strings)
+        if len(texts) >= 2:
+            amount_text = texts[0].replace("$", "").strip()
+            percent_text = texts[1].replace("%", "").strip()
+
+            try:
+                amount = float(amount_text)
+                percent = float(percent_text)
+            except ValueError:
+                print(f"⚠️ Skipping invalid entry: {texts}")
+                continue
+
+            if amount > MIN_PROFIT_DOLLARS or percent > MIN_PERCENT:
+                entry = f"${amount:.2f} | {percent:.2f}%"
+
+                # Only send if not already seen
+                if entry not in seen_entries:
+                    print(f"🔔 New: {entry}")
+                    send_push_notification(USER_KEY, APP_TOKEN, f"New Opportunity:\n{entry}")
+                    seen_entries.add(entry)
+                    new_found += 1
+
+    if new_found == 0:
+        print("✅ No new qualifying entries.")
     else:
-        print(f"- ⚠️ Unexpected format: {texts}")
+        print(f"📬 Sent {new_found} new notification(s).")
 
-# Optional: Keep browser open or close it
-# driver.quit()
+# --- Loop forever ---
+print(f"📡 Monitoring started. Every {INTERVAL_MINUTES} min | Thresholds: > ${MIN_PROFIT_DOLLARS} or > {MIN_PERCENT}%")
+
+try:
+    while True:
+        fetch_and_check_arbitrage()
+        print(f"🕒 Sleeping {INTERVAL_MINUTES} minutes...\n")
+        time.sleep(INTERVAL_MINUTES * 60)
+except KeyboardInterrupt:
+    print("🛑 Script manually stopped.")
