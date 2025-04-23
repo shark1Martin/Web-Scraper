@@ -21,7 +21,7 @@ def send_push_notification(user_key, app_token, message, title="DarkHorse Alert"
     return response.status_code == 200
 
 # --- Config ---
-INTERVAL_MINUTES = 5
+INTERVAL_MINUTES = 1
 MIN_PROFIT_DOLLARS = 10.00
 MIN_PERCENT = 2.00
 NOTIFIED_FILE = "notified_entries.txt"
