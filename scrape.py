@@ -3,8 +3,11 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
 import requests
+from datetime import timezone
 import time
 import os
+from pymongo import MongoClient
+from datetime import datetime
 
 # --- Pushover setup ---
 USER_KEY = "ubxha8koods5ppmui6r6rjavv1cezo"
@@ -19,6 +22,12 @@ def send_push_notification(user_key, app_token, message, title="DarkHorse Alert"
     }
     response = requests.post("https://api.pushover.net/1/messages.json", data=payload)
     return response.status_code == 200
+
+# --- MongoDB setup ---
+MONGO_URI = "mongodb+srv://mmakaveev123:Makaveev2005!@scaper-dev-1.mtjkh66.mongodb.net/"
+client = MongoClient(MONGO_URI)
+db = client["darkhorse_data"]
+collection = db["opportunities"]
 
 # --- Config ---
 INTERVAL_MINUTES = 1
@@ -36,8 +45,7 @@ options.add_argument(f"profile-directory={profile_dir}")
 options.add_argument("--window-size=1920,1080")
 options.add_argument("--disable-gpu")
 options.add_argument("--log-level=3")
-# Optional: move window far off-screen if you want it invisible
-# options.add_argument("--window-position=10000,10000")
+# options.add_argument("--window-position=10000,10000")  # optional: hide offscreen
 
 # --- Load previously notified entries ---
 def load_notified_entries(filepath):
@@ -87,8 +95,46 @@ def fetch_and_check_arbitrage():
                 entry = f"${amount:.2f} | {percent:.2f}%"
 
                 if entry not in seen_entries:
+                    # 🧩 Get full row
+                    row = cell.find_parent("tr")
+
+                    # 🕒 Extract event time
+                    time_cell = row.find("td", class_="time-col")
+                    if time_cell:
+                        time_parts = list(time_cell.stripped_strings)
+                        event_time = " ".join(time_parts)
+                    else:
+                        event_time = "Unknown"
+
+                    # 🏦 Extract sportsbook names
+                    bookmakers = row.find_all("img", alt=True)
+                    sportsbook_1 = bookmakers[0]["alt"] if len(bookmakers) >= 1 else "Unknown"
+                    sportsbook_2 = bookmakers[1]["alt"] if len(bookmakers) >= 2 else "Unknown"
+
+                    # 📢 Log everything
                     print(f"🔔 New: {entry}")
-                    send_push_notification(USER_KEY, APP_TOKEN, f"New Opportunity:\n{entry}")
+                    print(f"📆 Event Time: {event_time}")
+                    print(f"🏦 Books: {sportsbook_1} vs {sportsbook_2}")
+
+                    # 🔔 Send notification
+                    send_push_notification(
+                        USER_KEY,
+                        APP_TOKEN,
+                        f"{sportsbook_1} vs {sportsbook_2}\n{event_time}\n{entry}"
+                    )
+
+                    # 💾 Save to MongoDB
+                    collection.insert_one({
+                        "time_posted": datetime.now(timezone.utc),
+                        "sportsbook_1": sportsbook_1,
+                        "sportsbook_2": sportsbook_2,
+                        "event_time": event_time,
+                        "profit_percent": percent,
+                        "profit_dollars": amount
+                    })
+                    print("🗂️ Saved to MongoDB")
+
+                    # 🧠 Remember it
                     seen_entries.add(entry)
                     save_notified_entry(NOTIFIED_FILE, entry)
                     new_found += 1
