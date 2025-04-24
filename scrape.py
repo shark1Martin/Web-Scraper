@@ -132,7 +132,7 @@ def fetch_and_check_arbitrage():
                         "profit_percent": percent,
                         "profit_dollars": amount
                     })
-                    print("🗂️ Saved to MongoDB")
+                    print("   Saved to MongoDB\n")
 
                     # 🧠 Remember it
                     seen_entries.add(entry)
