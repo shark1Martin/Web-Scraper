@@ -37,7 +37,7 @@ collection = db["opportunities"]
 
 # --- Config ---
 INTERVAL_MINUTES = 1
-MIN_PROFIT_DOLLARS = 10.00
+MIN_PROFIT_DOLLARS = 12.00
 MIN_PERCENT = 2.00
 
 # --- Chrome setup ---
@@ -127,7 +127,7 @@ def fetch_and_check_arbitrage():
                     "profit_dollars": amount,
                     "entry_hash": entry_hash
                 })
-                print("🗂️ Saved to MongoDB\n")
+                print("   Saved to MongoDB\n")
 
                 new_found += 1
 

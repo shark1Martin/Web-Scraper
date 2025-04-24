@@ -26,7 +26,9 @@ Things to work on:
 - Also fix the logging, the same %/$ can come up but be different you know...
 
 
-LATEST UPDATE:
+Update Log:
+
+4/22/2025
 
 It works in the background, but it needs the chrome profile to be already logged in and the browse always on.
 
@@ -35,3 +37,14 @@ Computer must also always be on, and I don't think its taking to much RAM (this 
 It scrapes, updates and sends notifications perfectly fine.
 
 Only thing is that you need VSCODE/Terminal to be on.
+
+
+4/24/2025
+
+Finally added the .gitignore file so that I don't dox myself, my database and my notifications api...
+
+Scraper now connects to MongoDB, where it cross-checks to see if there are any duplicates entries from the previous run, and saves new entries going forward.
+
+Planning to visualize this data and make some detailed ai-analysis going forward.
+
+Also planning to add a front-end dashboard and an application type installation if possible..
