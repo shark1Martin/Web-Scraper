@@ -12,7 +12,7 @@ import os
 
 # --- Load secrets from .env ---
 load_dotenv()
-USER_KEY = os.getenv("USER_KEY")
+USER_KEY = os.getenv("USER_KEY") 
 APP_TOKEN = os.getenv("APP_TOKEN")
 MONGO_URI = os.getenv("MONGO_URI")
 
@@ -30,7 +30,7 @@ def send_push_notification(user_key, app_token, message, title="DarkHorse Alert"
 # --- MongoDB setup ---
 client = MongoClient(MONGO_URI)
 db = client["darkhorse_data"]
-collection = db["opportunities"]
+collection = db["opportunities"] # Make sure to enter desired database cluster
 
 # Optional: ensure fast duplicate checks
 # collection.create_index("entry_hash", unique=True)

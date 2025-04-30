@@ -12,6 +12,24 @@ Applications Required:
 
 - Requests: To simplify the interaction with web services by abstracting complexities of manual HTTP connection management.
 
+- MongoDB: To store and validate new entries. This tool can also be used to analyze data and configure tactics.
+
+Libaries:
+
+Library                             Purpose                                                     Install Command
+-------                             -------                                                     ---------------
+selenium                            Web Automation (browser control)                            pip install selenium
+
+bs4 (BeautifulSoup)                 HTML parsing from page source                               pip install beautifulsoup4
+
+requests                            Send push notifications requests to Pushover api            pip install requests
+
+pymongo                             Interact with MongoDB Atlas                                 pip install pymongo
+
+python-dotenv                       Load private security keys from .env file securely          pip install python-dotenv
+
+lxml (optional but recommended)     Fastest parser for BeautifulSoup                            pip install lxml
+
 
 Things to work on:
 
@@ -22,8 +40,6 @@ Things to work on:
 - <Add AI-based alert filters> ??? Recommended by ChatGPT, maybe ill learn some AI, lets do it!
 
 - Make it work without having VSCODE/terminal always on.
-
-- Also fix the logging, the same %/$ can come up but be different you know...
 
 
 Update Log:
