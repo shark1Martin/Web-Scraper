@@ -83,9 +83,9 @@ def fetch_and_check_arbitrage():
             time_cell = row.find("td", class_="time-col")
             event_time = " ".join(list(time_cell.stripped_strings)) if time_cell else "Unknown"
 
-            bookmakers = row.find_all("img", alt=True)
-            sportsbook_1 = bookmakers[0]["alt"] if len(bookmakers) >= 1 else "Unknown"
-            sportsbook_2 = bookmakers[1]["alt"] if len(bookmakers) >= 2 else "Unknown"
+            bookmaker_imgs = row.find_all("img", alt=True)
+            sportsbook_1 = " / ".join(img["alt"] for img in bookmaker_imgs[:2]) if len(bookmaker_imgs) >= 2 else "Unknown"
+            sportsbook_2 = bookmaker_imgs[2]["alt"] if len(bookmaker_imgs) >= 3 else "Unknown"
 
             identifier = f"{sportsbook_1}_{sportsbook_2}_{event_time}_{amount:.2f}_{percent:.2f}"
             entry_hash = hashlib.md5(identifier.encode()).hexdigest()
