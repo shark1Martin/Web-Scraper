@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, request, session
+from flask import Flask, flash, render_template, redirect, url_for, request, session
 from pymongo import MongoClient
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import timedelta
@@ -66,8 +66,15 @@ def dashboard():
         min_dollars = float(request.form.get("min_profit_dollars", 12.0))
         min_percent = float(request.form.get("min_percent", 2.0))
         config_col.delete_many({})
-        config_col.insert_one({"min_profit_dollars": min_dollars, "min_percent": min_percent})
+        config_col.insert_one({
+            "_id": "thresholds",
+            "min_profit_dollars": min_dollars,
+            "min_percent": min_percent
+        })
         config = {"min_profit_dollars": min_dollars, "min_percent": min_percent}
+        print(f"🔧 Updated filter thresholds: ${min_dollars} / {min_percent}%")
+        flash("✅ Filters updated successfully!", "success")
+
 
     sort_by = request.args.get("sort", "time_posted")
     direction = request.args.get("dir", "desc")
