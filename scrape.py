@@ -12,7 +12,7 @@ import os
 
 # --- Load secrets from .env ---
 load_dotenv()
-USER_KEY = os.getenv("USER_KEY") 
+USER_KEY = os.getenv("USER_KEY")
 APP_TOKEN = os.getenv("APP_TOKEN")
 MONGO_URI = os.getenv("MONGO_URI")
 
@@ -30,18 +30,16 @@ def send_push_notification(user_key, app_token, message, title="DarkHorse Alert"
 # --- MongoDB setup ---
 client = MongoClient(MONGO_URI)
 db = client["darkhorse_data"]
-collection = db["opportunities"] # Make sure to enter desired database cluster
-
-# Optional: ensure fast duplicate checks
-# collection.create_index("entry_hash", unique=True)
+opportunities_col = db["entries_V4"]
+live_col = db["live_entries"]
 
 # --- Config ---
 INTERVAL_MINUTES = 1
 MIN_PROFIT_DOLLARS = 12.00
 MIN_PERCENT = 2.00
 
-# --- Chrome setup ---
-chrome_profile_path = r"C:\Users\mmaka\AppData\Local\Google\Chrome\User Data"
+# --- Chrome setup (NOT headless) ---
+chrome_profile_path = os.getenv("CHROME_PROFILE_PATH")
 profile_dir = "Profile 2"
 
 options = Options()
@@ -51,7 +49,7 @@ options.add_argument("--window-size=1920,1080")
 options.add_argument("--disable-gpu")
 options.add_argument("--log-level=3")
 
-# Launch Chrome once
+# --- Launch Chrome ---
 driver = webdriver.Chrome(options=options)
 driver.get("https://darkhorseodds.com/arbitrage")
 time.sleep(5)
@@ -80,45 +78,44 @@ def fetch_and_check_arbitrage():
                 print(f"⚠️ Skipping invalid entry: {texts}")
                 continue
 
+            row = cell.find_parent("tr")
+
+            time_cell = row.find("td", class_="time-col")
+            event_time = " ".join(list(time_cell.stripped_strings)) if time_cell else "Unknown"
+
+            bookmakers = row.find_all("img", alt=True)
+            sportsbook_1 = bookmakers[0]["alt"] if len(bookmakers) >= 1 else "Unknown"
+            sportsbook_2 = bookmakers[1]["alt"] if len(bookmakers) >= 2 else "Unknown"
+
+            identifier = f"{sportsbook_1}_{sportsbook_2}_{event_time}_{amount:.2f}_{percent:.2f}"
+            entry_hash = hashlib.md5(identifier.encode()).hexdigest()
+
+            live_col.delete_many({})  # Clear previous live entries
+            live_col.insert_one({
+                "time_posted": datetime.now(timezone.utc),
+                "sportsbook_1": sportsbook_1,
+                "sportsbook_2": sportsbook_2,
+                "event_time": event_time,
+                "profit_percent": percent,
+                "profit_dollars": amount,
+                "entry_hash": entry_hash
+            })
+
             if amount > MIN_PROFIT_DOLLARS or percent > MIN_PERCENT:
-                # 🧩 Get full row
-                row = cell.find_parent("tr")
-
-                # 🕒 Extract event time
-                time_cell = row.find("td", class_="time-col")
-                if time_cell:
-                    time_parts = list(time_cell.stripped_strings)
-                    event_time = " ".join(time_parts)
-                else:
-                    event_time = "Unknown"
-
-                # 🏦 Extract sportsbook names
-                bookmakers = row.find_all("img", alt=True)
-                sportsbook_1 = bookmakers[0]["alt"] if len(bookmakers) >= 1 else "Unknown"
-                sportsbook_2 = bookmakers[1]["alt"] if len(bookmakers) >= 2 else "Unknown"
-
-                # 🔐 Generate entry hash
-                identifier = f"{sportsbook_1}_{sportsbook_2}_{event_time}_{amount:.2f}_{percent:.2f}"
-                entry_hash = hashlib.md5(identifier.encode()).hexdigest()
-
-                # ❌ Skip if already in MongoDB
-                if collection.find_one({"entry_hash": entry_hash}):
+                if opportunities_col.find_one({"entry_hash": entry_hash}):
                     continue
 
-                # 📢 Log
                 print(f"🔔 New: ${amount:.2f} | {percent:.2f}%")
                 print(f"📆 Event Time: {event_time}")
                 print(f"🏦 Books: {sportsbook_1} vs {sportsbook_2}")
 
-                # 📲 Push notification
                 send_push_notification(
                     USER_KEY,
                     APP_TOKEN,
                     f"{sportsbook_1} vs {sportsbook_2}\n{event_time}\n${amount:.2f} | {percent:.2f}%"
                 )
 
-                # 💾 Save to MongoDB
-                collection.insert_one({
+                opportunities_col.insert_one({
                     "time_posted": datetime.now(timezone.utc),
                     "sportsbook_1": sportsbook_1,
                     "sportsbook_2": sportsbook_2,
@@ -128,7 +125,6 @@ def fetch_and_check_arbitrage():
                     "entry_hash": entry_hash
                 })
                 print("   Saved to MongoDB\n")
-
                 new_found += 1
 
     if new_found == 0:
@@ -137,12 +133,12 @@ def fetch_and_check_arbitrage():
         print(f"📬 Sent {new_found} new notification(s).")
 
 # --- Main loop ---
-print(f"📡 Monitoring every {INTERVAL_MINUTES} min | Thresholds: > ${MIN_PROFIT_DOLLARS} or > {MIN_PERCENT}%\n")
+print(f"Monitoring every {INTERVAL_MINUTES} min | Thresholds: > ${MIN_PROFIT_DOLLARS} or > {MIN_PERCENT}%\n")
 
 try:
     while True:
         fetch_and_check_arbitrage()
-        print(f"🕒 Sleeping {INTERVAL_MINUTES} minutes...\n")
+        print(f"Sleeping {INTERVAL_MINUTES} minutes...\n")
         time.sleep(INTERVAL_MINUTES * 60)
 except KeyboardInterrupt:
     print("🛑 Script manually stopped.")
