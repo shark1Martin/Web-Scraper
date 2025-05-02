@@ -4,18 +4,6 @@ Let's make some dough.
 
 Applications Required:
 
-- Pushover: To send notifications to your phone whenever the desired outcome appears.
-
-- BeautifulSoup: To parse the web page and find the desired information to send to user.
-
-- Selenium: To be able to open and operate on chrome. 
-
-- Requests: To simplify the interaction with web services by abstracting complexities of manual HTTP connection management.
-
-- MongoDB: To store and validate new entries. This tool can also be used to analyze data and configure tactics.
-
-Libaries:
-
 Library                             Purpose                                                     Install Command
 -------                             -------                                                     ---------------
 selenium                            Web Automation (browser control)                            pip install selenium
@@ -30,16 +18,22 @@ python-dotenv                       Load private security keys from .env file se
 
 lxml (optional but recommended)     Fastest parser for BeautifulSoup                            pip install lxml
 
+flask                               Web framework                                               pip install flask
+
+gunicorn                            WSGI server for deployment                                  pip install gunicorn
+
+bcrypt                              Secure password hashing                                     pip install bcrypt
+
 
 Things to work on:
 
-- Make it so that it sends the entire bet entry (teams, odds, event, and bet amount)
-
-- Potentially make a Windows Tray App, for experience?
+- Potentially make a Windows Tray App, for experience? (Slowly looking away at this..maybe ill do it for another project)
 
 - <Add AI-based alert filters> ??? Recommended by ChatGPT, maybe ill learn some AI, lets do it!
 
 - Make it work without having VSCODE/terminal always on.
+
+- For the frontend, add the MongoDB Charts to the homepage and getting it online
 
 
 Update Log:
@@ -64,3 +58,11 @@ Scraper now connects to MongoDB, where it cross-checks to see if there are any d
 Planning to visualize this data and make some detailed ai-analysis going forward.
 
 Also planning to add a front-end dashboard and an application type installation if possible..
+
+
+5/1/2025
+
+Added some HTML for the front-end which includes a password page and a basic homepage with all the current entries.
+
+Now I have to work on actually getting it to work online, not just on my local machine.
+
