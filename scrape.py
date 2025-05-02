@@ -54,16 +54,26 @@ driver = webdriver.Chrome(options=options)
 driver.get("https://darkhorseodds.com/arbitrage")
 time.sleep(5)
 
+# --- Get thresholds from DB ---
+def get_thresholds():
+    config = db["config"].find_one({"_id": "thresholds"})
+    if config:
+        return config.get("min_profit_dollars", MIN_PROFIT_DOLLARS), config.get("min_percent", MIN_PERCENT)
+    return MIN_PROFIT_DOLLARS, MIN_PERCENT
+
 # --- Scrape and notify ---
 def fetch_and_check_arbitrage():
     global driver
 
+    min_dollars, min_percent = get_thresholds()
     driver.refresh()
     time.sleep(5)
 
     soup = BeautifulSoup(driver.page_source, 'lxml')
     profit_cells = soup.find_all('td', class_='profit-col')
     new_found = 0
+
+    live_col.delete_many({})  # Clear all live entries
 
     for cell in profit_cells:
         texts = list(cell.stripped_strings)
@@ -79,7 +89,6 @@ def fetch_and_check_arbitrage():
                 continue
 
             row = cell.find_parent("tr")
-
             time_cell = row.find("td", class_="time-col")
             event_time = " ".join(list(time_cell.stripped_strings)) if time_cell else "Unknown"
 
@@ -90,7 +99,7 @@ def fetch_and_check_arbitrage():
             identifier = f"{sportsbook_1}_{sportsbook_2}_{event_time}_{amount:.2f}_{percent:.2f}"
             entry_hash = hashlib.md5(identifier.encode()).hexdigest()
 
-            live_col.delete_many({})  # Clear previous live entries
+            # Save to live_entries regardless of thresholds
             live_col.insert_one({
                 "time_posted": datetime.now(timezone.utc),
                 "sportsbook_1": sportsbook_1,
@@ -101,9 +110,10 @@ def fetch_and_check_arbitrage():
                 "entry_hash": entry_hash
             })
 
-            if amount > MIN_PROFIT_DOLLARS or percent > MIN_PERCENT:
+            # Notify only if entry is new and passes thresholds
+            if amount > min_dollars or percent > min_percent:
                 if opportunities_col.find_one({"entry_hash": entry_hash}):
-                    continue
+                    continue  # already notified
 
                 print(f"🔔 New: ${amount:.2f} | {percent:.2f}%")
                 print(f"📆 Event Time: {event_time}")
@@ -131,6 +141,7 @@ def fetch_and_check_arbitrage():
         print("✅ No new qualifying entries.")
     else:
         print(f"📬 Sent {new_found} new notification(s).")
+
 
 # --- Main loop ---
 print(f"Monitoring every {INTERVAL_MINUTES} min | Thresholds: > ${MIN_PROFIT_DOLLARS} or > {MIN_PERCENT}%\n")
