@@ -89,16 +89,17 @@ def fetch_and_check_arbitrage():
         time_cell = row.find("td", class_="time-col")
         event_time = " ".join(list(time_cell.stripped_strings)) if time_cell else "Unknown"
 
-        # Extract from specific sportsbook columns
+        # 🎯 New: Parse sportsbook icons from book columns
         def extract_sportsbooks(col_class):
-            col = row.find("td", class_=col_class)
-            if not col:
+            td = row.find("td", class_=col_class)
+            if not td:
                 return "Unknown"
-            icons = col.find_all("app-sportsbook-icon")
-            return " / ".join(icon.img["alt"] for icon in icons if icon.find("img", alt=True))
+            imgs = td.find_all("img", alt=True)
+            names = [img["alt"].strip() for img in imgs if img.get("alt")]
+            return " / ".join(names) if names else "Unknown"
 
-        sportsbook_1 = extract_sportsbooks("primary-book-col")
-        sportsbook_2 = extract_sportsbooks("hedge-book-col")
+        sportsbook_1 = extract_sportsbooks("primary-books-col")
+        sportsbook_2 = extract_sportsbooks("hedge-books-col")
 
         identifier = f"{sportsbook_1}_{sportsbook_2}_{event_time}_{amount:.2f}_{percent:.2f}"
         entry_hash = hashlib.md5(identifier.encode()).hexdigest()

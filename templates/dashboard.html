@@ -42,8 +42,16 @@
               <th>Event Time</th>
               <th>Sportsbook 1</th>
               <th>Sportsbook 2</th>
-              <th>Profit $</th>
-              <th>Profit %</th>
+              <th>
+                <a class="text-light text-decoration-none" href="{{ url_for('dashboard', sort='profit_dollars', dir='asc' if sort_by != 'profit_dollars' or direction == 'desc' else 'desc') }}">
+                  Profit $ {% if sort_by == 'profit_dollars' %}{{ '↑' if direction == 'asc' else '↓' }}{% endif %}
+                </a>
+              </th>
+              <th>
+                <a class="text-light text-decoration-none" href="{{ url_for('dashboard', sort='profit_percent', dir='asc' if sort_by != 'profit_percent' or direction == 'desc' else 'desc') }}">
+                  Profit % {% if sort_by == 'profit_percent' %}{{ '↑' if direction == 'asc' else '↓' }}{% endif %}
+                </a>
+              </th>              
             </tr>
           </thead>
           <tbody>

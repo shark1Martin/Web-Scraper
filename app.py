@@ -69,8 +69,17 @@ def dashboard():
         config_col.insert_one({"min_profit_dollars": min_dollars, "min_percent": min_percent})
         config = {"min_profit_dollars": min_dollars, "min_percent": min_percent}
 
-    entries = list(live_col.find().sort("time_posted", -1))
-    return render_template("dashboard.html", entries=entries, config=config)
+    sort_by = request.args.get("sort", "time_posted")
+    direction = request.args.get("dir", "desc")
+    direction_value = -1 if direction == "desc" else 1
+
+    valid_fields = {"time_posted", "profit_dollars", "profit_percent"}
+    if sort_by not in valid_fields:
+        sort_by = "time_posted"
+
+    entries = list(live_col.find().sort(sort_by, direction_value))
+    return render_template("dashboard.html", entries=entries, config=config, sort_by=sort_by, direction=direction)
+
 
 @app.route("/api/entries")
 def api_entries():
