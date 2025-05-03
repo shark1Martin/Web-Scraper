@@ -22,11 +22,20 @@ live_col = db["live_entries"]
 
 # --- Ensure default admin user exists ---
 def create_default_admin():
-    if not users_col.find_one({"username": "admin"}):
+    admin_password = os.getenv("ADMIN_PASSWORD", "admin")
+    existing_admin = users_col.find_one({"username": "admin"})
+    if not existing_admin:
         users_col.insert_one({
             "username": "admin",
-            "password_hash": generate_password_hash("admin")
+            "password_hash": generate_password_hash(admin_password)
         })
+    else:
+        # Optional: Reset password if ADMIN_PASSWORD changes
+        new_hash = generate_password_hash(admin_password)
+        users_col.update_one(
+            {"username": "admin"},
+            {"$set": {"password_hash": new_hash}}
+        )
 
 create_default_admin()
 
