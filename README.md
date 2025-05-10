@@ -24,6 +24,12 @@ gunicorn                            WSGI server for deployment                  
 
 bcrypt                              Secure password hashing                                     pip install bcrypt
 
+jinja2                              Templating engine used by Flask (comes with Flask)          (included with flask)
+
+bson                                JSON-like format for MongoDB (via bson.json_util)           (included with pymongo)
+
+werkzeug                            Used internally by Flask for routing and security	        (included with Flask)
+
 
 Things to work on:
 
@@ -33,8 +39,9 @@ Things to work on:
 
 - Make it work without having VSCODE/terminal always on.
 
-- For the frontend, add the MongoDB Charts to the homepage and getting it online
+- Add all entry categories (odds, amount, etc.)
 
+- Create new head admin role, and permissions to delete users and admins. Admins should only be able to delete users.
 
 Update Log:
 
@@ -65,4 +72,14 @@ Also planning to add a front-end dashboard and an application type installation 
 Added some HTML for the front-end which includes a password page and a basic homepage with all the current entries.
 
 Now I have to work on actually getting it to work online, not just on my local machine.
+
+5/9/2025
+
+Added roles such as admins and users. Added routes corresponding to each role.
+
+Added a signup page for new users and admins that require a keycode to do so.
+
+I'm trying to figure out how to use AI...hmm maybe something with analysis, or maybe some machine learning could be nice.
+
+Also need to fix entries table, not enough information is being displayed, and the time is in UTC not EST, maybe I should add a configurable timezone feature.
 

@@ -1,10 +1,9 @@
 Flask
-pymongo
-python-dotenv
-gunicorn
-requests
 selenium
 beautifulsoup4
+requests
+pymongo
+python-dotenv
 lxml
-werkzeug
+gunicorn
 bcrypt
