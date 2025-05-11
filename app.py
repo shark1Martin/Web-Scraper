@@ -14,7 +14,7 @@ import os
 
 load_dotenv()
 
-app = Flask(__name__, template_folder="../templates")
+app = Flask(__name__, template_folder="templates")
 app.secret_key = os.getenv("FLASK_SECRET", "supersecret")
 app.permanent_session_lifetime = timedelta(hours=12)
 
