@@ -15,6 +15,7 @@
       <div class="d-flex gap-2">
         <a href="{{ url_for('insights') }}" class="btn btn-outline-primary">View Insights</a>
         <a href="{{ url_for('view_users') }}" class="btn btn-outline-secondary">View Users</a>
+        <a href="{{ url_for('viewer_dashboard') }}" class="btn btn-outline-secondary">View as User</a>
         <a href="{{ url_for('logout') }}" class="btn btn-outline-danger">Logout</a>
       </div>
     </div>
@@ -30,6 +31,33 @@
         </div>
       {% endif %}
     {% endwith %}
+
+
+    <div class="card p-3 mb-4 shadow-sm">
+      <div class="row text-center">
+        <div class="col-md-6 border-end">
+          <h5>Yesterday</h5>
+          <p class="display-6 fw-bold text-secondary">{{ count_yesterday }}</p>
+        </div>
+        <div class="col-md-6">
+          <h5>Today</h5>
+          <p class="display-6 fw-bold text-success">{{ count_today }}</p>
+        </div>
+      </div>
+      <hr>
+      <div class="text-center">
+        <h6>Past Week</h6>
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+          {% for i in range(past_week_counts|length) %}
+            <div class="text-center">
+              <span class="badge bg-primary fs-6">{{ past_week_counts[i] }}</span><br>
+              <small class="text-muted">{{ past_week_labels[i] }}</small>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
 
 
     <form method="POST" class="card p-3 mb-4 shadow-sm">

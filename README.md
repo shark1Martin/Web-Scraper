@@ -41,7 +41,7 @@ Things to work on:
 
 - Add all entry categories (odds, amount, etc.)
 
-- Create new head admin role, and permissions to delete users and admins. Admins should only be able to delete users.
+- Fix the timezones for the graphs.
 
 Update Log:
 
@@ -83,3 +83,10 @@ I'm trying to figure out how to use AI...hmm maybe something with analysis, or m
 
 Also need to fix entries table, not enough information is being displayed, and the time is in UTC not EST, maybe I should add a configurable timezone feature.
 
+5/10/2025
+
+Add head admin role and its permissions to manage users and admins. Where admins can only manage users aswell.
+
+Admin entry counter to visualize the how much data is coming in and the number of opportunities presented to the user every day and for the past week.
+
+Added another graph in insights, but both graphs are in UTC, I need to fix that in the future.

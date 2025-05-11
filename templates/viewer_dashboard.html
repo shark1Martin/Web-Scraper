@@ -9,8 +9,46 @@
   <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h2>Viewer Dashboard</h2>
-      <a href="{{ url_for('logout') }}" class="btn btn-outline-danger">Logout</a>
+      <div class="d-flex gap-2">
+        {% if session.get('role') in ['admin', 'head_admin'] %}
+          <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary">← Back to Admin Dashboard</a>
+        {% endif %}
+        <a href="{{ url_for('logout') }}" class="btn btn-outline-danger">Logout</a>
+      </div>
     </div>
+
+
+
+
+    <div class="card p-3 mb-4 shadow-sm">
+        
+      <div class="text-center mb-3">
+        <h4 class="fw-bold text-dark">📈 Weekly Entry Overview</h4>
+        <p class="text-muted small">Track how many entries were logged each day</p>
+      </div>
+      
+      <div class="row text-center">
+        <div class="col-md-6 border-end">
+          <h5>Yesterday</h5>
+          <p class="display-6 fw-bold text-secondary">{{ count_yesterday }}</p>
+        </div>
+        <div class="col-md-6">
+          <h5>Today</h5>
+          <p class="display-6 fw-bold text-success">{{ count_today }}</p>
+        </div>
+      </div>
+      <hr>
+      <div class="text-center">
+        <h6>Past Week</h6>
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+          {% for count in past_week_counts %}
+            <span class="badge bg-primary fs-6">{{ count }}</span>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+
 
     <div class="card shadow-sm">
       <div class="card-header"><strong>Opportunities ({{ entries|length }})</strong></div>
